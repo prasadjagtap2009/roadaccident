@@ -1,8 +1,0 @@
-streamlit
-pandas
-plotly
-requests
-streamlit-lottie
-streamlit-extras
-scikit-learn
-mlxtend
