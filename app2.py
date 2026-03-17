@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -22,14 +23,18 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# FULL iOS GLASSMORPHISM + RACING INTRO ANIMATION CSS
+# INJECT INTRO OVERLAY VIA COMPONENT (prevents raw HTML flash on load)
 # -----------------------------------------------------------------------------
-st.markdown("""
-<style>
-/* ─── GOOGLE FONTS ─────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
 
-/* ─── RACING INTRO OVERLAY ──────────────────────────────────── */
+components.html("""
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:transparent; }
+
 #intro-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -40,75 +45,42 @@ st.markdown("""
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    animation: overlayFadeOut 0.8s ease-out 4.2s forwards;
     overflow: hidden;
+    animation: overlayFadeOut 0.8s ease-out 4.2s forwards;
 }
-
-/* Road */
 #intro-road {
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 100%;
-    height: 180px;
+    position: absolute; bottom: 0; left: 0;
+    width: 100%; height: 180px;
     background: linear-gradient(to bottom, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
     border-top: 3px solid rgba(255,255,255,0.08);
 }
-
-/* Road center dashes */
 #intro-road::before {
     content: '';
-    position: absolute;
-    top: 50%;
-    left: -200%;
-    width: 400%;
-    height: 4px;
+    position: absolute; top: 50%; left: -200%;
+    width: 400%; height: 4px;
     background: repeating-linear-gradient(90deg, transparent 0px, transparent 60px, rgba(255,200,0,0.6) 60px, rgba(255,200,0,0.6) 120px);
     animation: roadDashes 0.4s linear infinite;
 }
-
-/* Speed lines background */
 .speed-line {
-    position: absolute;
-    height: 2px;
+    position: absolute; height: 2px;
     background: linear-gradient(90deg, transparent, rgba(99,179,237,0.3), transparent);
     animation: speedLine 0.6s linear infinite;
     border-radius: 2px;
 }
-
-/* THE CAR SVG */
 #racing-car {
-    position: absolute;
-    bottom: 140px;
-    left: -200px;
-    width: 220px;
+    position: absolute; bottom: 140px; left: -200px; width: 220px;
     filter: drop-shadow(0 0 20px rgba(99,179,237,0.8)) drop-shadow(0 0 40px rgba(99,179,237,0.4));
     animation: carRace 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
     z-index: 10;
 }
-
-/* Headlight beam */
 #car-beam {
-    position: absolute;
-    bottom: 155px;
-    left: -200px;
-    width: 300px;
-    height: 30px;
+    position: absolute; bottom: 155px; left: -200px;
+    width: 300px; height: 30px;
     background: linear-gradient(90deg, rgba(255,240,180,0) 0%, rgba(255,240,180,0.15) 60%, rgba(255,240,180,0.35) 100%);
     clip-path: polygon(0 40%, 100% 0%, 100% 100%, 0 60%);
     animation: beamRace 2.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s forwards;
     z-index: 9;
 }
-
-/* Dust/tire particles */
-.tire-particle {
-    position: absolute;
-    bottom: 138px;
-    border-radius: 50%;
-    background: rgba(150, 150, 170, 0.4);
-    animation: particleFade 0.8s ease-out infinite;
-}
-
-/* Intro Title */
 #intro-title {
     font-family: 'Orbitron', monospace;
     font-size: clamp(28px, 5vw, 64px);
@@ -116,106 +88,158 @@ st.markdown("""
     color: transparent;
     background: linear-gradient(90deg, #63b3ed, #90cdf4, #e2e8f0, #90cdf4, #63b3ed);
     background-size: 300% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    text-align: center;
-    opacity: 0;
-    letter-spacing: 4px;
-    text-shadow: none;
+    -webkit-background-clip: text; background-clip: text;
+    text-align: center; opacity: 0; letter-spacing: 4px;
     animation: titleAppear 0.8s ease-out 2.2s forwards, shimmer 3s ease-in-out 2.2s infinite;
-    position: relative;
-    z-index: 20;
-    margin-bottom: 12px;
+    position: relative; z-index: 20; margin-bottom: 12px;
 }
-
 #intro-subtitle {
     font-family: 'Inter', sans-serif;
-    font-size: clamp(12px, 2vw, 18px);
-    font-weight: 300;
-    color: rgba(148, 163, 184, 0.9);
-    letter-spacing: 6px;
-    text-transform: uppercase;
-    opacity: 0;
-    animation: titleAppear 0.6s ease-out 2.6s forwards;
-    z-index: 20;
+    font-size: clamp(12px, 2vw, 18px); font-weight: 300;
+    color: rgba(148,163,184,0.9); letter-spacing: 6px;
+    text-transform: uppercase; opacity: 0;
+    animation: titleAppear 0.6s ease-out 2.6s forwards; z-index: 20;
 }
-
 #intro-loading {
-    position: absolute;
-    bottom: 200px;
-    width: 250px;
-    height: 3px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 3px;
-    overflow: hidden;
-    z-index: 20;
-    opacity: 0;
+    position: absolute; bottom: 200px;
+    width: 250px; height: 3px;
+    background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;
+    z-index: 20; opacity: 0;
     animation: titleAppear 0.3s ease-out 3.0s forwards;
 }
-
 #intro-loading-bar {
     height: 100%;
     background: linear-gradient(90deg, #63b3ed, #90cdf4);
-    border-radius: 3px;
-    animation: loadingBar 1.0s ease-out 3.0s forwards;
-    width: 0%;
+    border-radius: 3px; width: 0%;
     box-shadow: 0 0 10px rgba(99,179,237,0.8);
+    animation: loadingBar 1.0s ease-out 3.0s forwards;
 }
-
-/* ─── KEYFRAMES ─────────────────────────────────────────────── */
 @keyframes carRace {
-    0% { left: -200px; }
-    35% { left: 30%; transform: scaleX(1.05); }
-    65% { left: 65%; transform: scaleX(1); }
-    80% { left: 80%; opacity: 1; }
+    0%   { left: -200px; }
+    35%  { left: 30%; transform: scaleX(1.05); }
+    65%  { left: 65%; transform: scaleX(1); }
+    80%  { left: 80%; opacity: 1; }
     100% { left: 110%; opacity: 0; }
 }
-
 @keyframes beamRace {
-    0% { left: -200px; }
-    35% { left: calc(30% + 120px); }
-    65% { left: calc(65% + 120px); }
-    80% { left: calc(80% + 120px); opacity: 1; }
+    0%   { left: -200px; }
+    35%  { left: calc(30% + 120px); }
+    65%  { left: calc(65% + 120px); }
+    80%  { left: calc(80% + 120px); opacity: 1; }
     100% { left: calc(110% + 120px); opacity: 0; }
 }
-
 @keyframes roadDashes {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(120px); }
+    0% { transform: translateX(0); } 100% { transform: translateX(120px); }
 }
-
 @keyframes speedLine {
     0% { transform: translateX(110vw); opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
+    10% { opacity: 1; } 90% { opacity: 1; }
     100% { transform: translateX(-200px); opacity: 0; }
 }
-
 @keyframes titleAppear {
     0% { opacity: 0; transform: translateY(20px); }
     100% { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes shimmer {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-
-@keyframes loadingBar {
-    0% { width: 0%; }
-    100% { width: 100%; }
-}
-
+@keyframes loadingBar { 0% { width: 0%; } 100% { width: 100%; } }
 @keyframes overlayFadeOut {
     0% { opacity: 1; pointer-events: all; }
+    99% { opacity: 0; pointer-events: none; }
     100% { opacity: 0; pointer-events: none; display: none; }
 }
+</style>
+</head>
+<body>
+<div id="intro-overlay">
+    <div class="speed-line" style="top:20%;width:800px;animation-delay:0s;animation-duration:0.5s;"></div>
+    <div class="speed-line" style="top:35%;width:600px;animation-delay:0.1s;animation-duration:0.45s;"></div>
+    <div class="speed-line" style="top:50%;width:900px;animation-delay:0.05s;animation-duration:0.55s;"></div>
+    <div class="speed-line" style="top:65%;width:700px;animation-delay:0.15s;animation-duration:0.5s;"></div>
+    <div class="speed-line" style="top:78%;width:500px;animation-delay:0.2s;animation-duration:0.4s;"></div>
+    <div class="speed-line" style="top:28%;width:750px;animation-delay:0.08s;animation-duration:0.6s;"></div>
+    <div class="speed-line" style="top:58%;width:650px;animation-delay:0.12s;animation-duration:0.48s;"></div>
+    <div id="intro-title">🚦 ROAD SAFETY AI</div>
+    <div id="intro-subtitle">Data Mining Intelligence Platform</div>
+    <div id="intro-loading"><div id="intro-loading-bar"></div></div>
+    <div id="intro-road"></div>
+    <div id="car-beam"></div>
+    <svg id="racing-car" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="110" cy="66" rx="80" ry="6" fill="rgba(0,0,0,0.4)"/>
+        <path d="M20 50 L30 30 L60 18 L150 18 L185 30 L195 50 Z" fill="url(#bodyGrad)" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
+        <path d="M55 18 L70 8 L145 8 L160 18 Z" fill="url(#roofGrad)" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+        <path d="M75 18 L82 9 L138 9 L145 18 Z" fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.5)" stroke-width="0.5"/>
+        <rect x="82" y="10" width="25" height="8" rx="2" fill="rgba(99,179,237,0.3)" stroke="rgba(99,179,237,0.4)" stroke-width="0.5"/>
+        <line x1="110" y1="18" x2="112" y2="50" stroke="rgba(99,179,237,0.3)" stroke-width="1"/>
+        <path d="M155 25 L185 30 L188 38 L155 35 Z" fill="rgba(99,179,237,0.08)" stroke="rgba(99,179,237,0.3)" stroke-width="0.5"/>
+        <rect x="18" y="26" width="12" height="3" rx="1.5" fill="rgba(99,179,237,0.6)" stroke="rgba(99,179,237,0.8)" stroke-width="0.5"/>
+        <ellipse cx="188" cy="40" rx="7" ry="5" fill="rgba(255,240,180,0.9)" stroke="rgba(255,240,180,0.5)" stroke-width="1"/>
+        <ellipse cx="188" cy="40" rx="4" ry="3" fill="white"/>
+        <rect x="20" y="38" width="8" height="6" rx="2" fill="rgba(255,60,60,0.9)" stroke="rgba(255,60,60,0.6)" stroke-width="0.5"/>
+        <rect x="18" y="37" width="10" height="8" rx="2" fill="rgba(255,60,60,0.2)"/>
+        <circle cx="55" cy="55" r="13" fill="#1a1a2e" stroke="rgba(99,179,237,0.5)" stroke-width="2"/>
+        <circle cx="55" cy="55" r="8" fill="#0d1117" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
+        <circle cx="55" cy="55" r="3" fill="rgba(99,179,237,0.7)"/>
+        <line x1="55" y1="47" x2="55" y2="63" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+        <line x1="47" y1="55" x2="63" y2="55" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+        <circle cx="160" cy="55" r="13" fill="#1a1a2e" stroke="rgba(99,179,237,0.5)" stroke-width="2"/>
+        <circle cx="160" cy="55" r="8" fill="#0d1117" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
+        <circle cx="160" cy="55" r="3" fill="rgba(99,179,237,0.7)"/>
+        <line x1="160" y1="47" x2="160" y2="63" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+        <line x1="152" y1="55" x2="168" y2="55" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
+        <path d="M55 30 L155 30" stroke="rgba(99,179,237,0.4)" stroke-width="2" stroke-dasharray="8,4"/>
+        <rect x="175" y="46" width="18" height="8" rx="2" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+        <circle cx="12" cy="46" r="4" fill="rgba(150,150,180,0.2)"/>
+        <circle cx="6" cy="42" r="3" fill="rgba(150,150,180,0.15)"/>
+        <circle cx="2" cy="50" r="2.5" fill="rgba(150,150,180,0.1)"/>
+        <defs>
+            <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1"/>
+                <stop offset="50%" style="stop-color:#0f2440;stop-opacity:1"/>
+                <stop offset="100%" style="stop-color:#0a1628;stop-opacity:1"/>
+            </linearGradient>
+            <linearGradient id="roofGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#2a4a70;stop-opacity:1"/>
+                <stop offset="100%" style="stop-color:#1a3050;stop-opacity:1"/>
+            </linearGradient>
+        </defs>
+    </svg>
+</div>
+<script>
+// After overlay fades, break out of iframe and show parent content
+setTimeout(function() {
+    try {
+        // Tell parent window overlay is done
+        window.parent.document.getElementById('intro-overlay') && 
+        (window.parent.document.getElementById('intro-overlay').style.display = 'none');
+    } catch(e) {}
+}, 5100);
+</script>
+</body>
+</html>
+""", height=0, scrolling=False)
 
-@keyframes particleFade {
-    0% { transform: translate(0, 0) scale(1); opacity: 0.5; }
-    100% { transform: translate(-30px, -20px) scale(0); opacity: 0; }
+# -----------------------------------------------------------------------------
+# MAIN APP CSS (glassmorphism theme - no intro overlay here)
+# -----------------------------------------------------------------------------
+st.markdown("""
+<style>
+/* ─── GOOGLE FONTS ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ─── FIX: KEEP STREAMLIT TOP BAR BEHIND EVERYTHING ON LOAD ─── */
+header[data-testid="stHeader"] {
+    z-index: 100 !important;
+    background: transparent !important;
 }
+.stAppToolbar { z-index: 100 !important; }
+[data-testid="stToolbar"],
+[data-testid="stDecoration"],
+[data-testid="stStatusWidget"],
+[data-testid="collapsedControl"] { z-index: 100 !important; }
 
 /* ─── GLOBAL STREAMLIT BASE ─────────────────────────────────── */
 html, body, [class*="css"] {
@@ -224,7 +248,8 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background: linear-gradient(135deg, #060b14 0%, #0a0f1e 30%, #060d1a 60%, #0a0c18 100%) !important;
+    background: linear-gradient(135deg,
+        #060b14 0%, #0a0f1e 30%, #060d1a 60%, #0a0c18 100%) !important;
     background-attachment: fixed !important;
     min-height: 100vh;
 }
@@ -235,7 +260,7 @@ html, body, [class*="css"] {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-image: 
+    background-image:
         radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.15) 0%, transparent 100%),
         radial-gradient(1px 1px at 25% 35%, rgba(255,255,255,0.1) 0%, transparent 100%),
         radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.08) 0%, transparent 100%),
@@ -255,7 +280,7 @@ html, body, [class*="css"] {
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 20px !important;
-    box-shadow: 
+    box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.1),
         0 0 0 1px rgba(255,255,255,0.02) !important;
@@ -265,7 +290,7 @@ html, body, [class*="css"] {
 
 .glass-card:hover {
     border-color: rgba(99, 179, 237, 0.25) !important;
-    box-shadow: 
+    box-shadow:
         0 16px 48px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.15),
         0 0 30px rgba(99,179,237,0.05) !important;
@@ -308,7 +333,7 @@ h2, h3 {
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
     border-radius: 16px !important;
     padding: 20px !important;
-    box-shadow: 
+    box-shadow:
         0 4px 24px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
     transition: all 0.3s ease !important;
@@ -319,8 +344,8 @@ h2, h3 {
 [data-testid="metric-container"]::before {
     content: '';
     position: absolute;
-    top: 0; left: 0;
-    right: 0; height: 2px;
+    top: 0; left: 0; right: 0;
+    height: 2px;
     background: linear-gradient(90deg, transparent, rgba(99,179,237,0.6), transparent);
     opacity: 0.7;
 }
@@ -328,7 +353,9 @@ h2, h3 {
 [data-testid="metric-container"]:hover {
     border-color: rgba(99, 179, 237, 0.3) !important;
     transform: translateY(-3px) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99,179,237,0.08) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(99,179,237,0.08) !important;
 }
 
 [data-testid="stMetricValue"] {
@@ -365,7 +392,6 @@ h2, h3 {
     letter-spacing: 3px !important;
 }
 
-/* Sidebar divider */
 [data-testid="stSidebar"] hr {
     border-color: rgba(255,255,255,0.06) !important;
     margin: 1rem 0 !important;
@@ -398,10 +424,9 @@ h2, h3 {
 
 @keyframes pulseDot {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.4); }
+    50%       { opacity: 0.4; transform: scale(1.4); }
 }
 
-/* Sidebar nav items */
 .nav-item {
     display: flex;
     align-items: center;
@@ -432,7 +457,9 @@ h2, h3 {
 
 /* ─── BUTTONS ────────────────────────────────────────────────── */
 .stButton > button {
-    background: linear-gradient(135deg, rgba(99,179,237,0.15) 0%, rgba(66,153,225,0.25) 100%) !important;
+    background: linear-gradient(135deg,
+        rgba(99,179,237,0.15) 0%,
+        rgba(66,153,225,0.25) 100%) !important;
     backdrop-filter: blur(10px) !important;
     border: 1px solid rgba(99,179,237,0.4) !important;
     border-radius: 14px !important;
@@ -444,13 +471,20 @@ h2, h3 {
     padding: 14px 28px !important;
     transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
     text-transform: uppercase !important;
-    box-shadow: 0 4px 20px rgba(99,179,237,0.15), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    box-shadow:
+        0 4px 20px rgba(99,179,237,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.1) !important;
 }
 
 .stButton > button:hover {
-    background: linear-gradient(135deg, rgba(99,179,237,0.25) 0%, rgba(66,153,225,0.4) 100%) !important;
+    background: linear-gradient(135deg,
+        rgba(99,179,237,0.25) 0%,
+        rgba(66,153,225,0.4) 100%) !important;
     border-color: rgba(99,179,237,0.7) !important;
-    box-shadow: 0 8px 30px rgba(99,179,237,0.3), 0 0 0 1px rgba(99,179,237,0.1), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+    box-shadow:
+        0 8px 30px rgba(99,179,237,0.3),
+        0 0 0 1px rgba(99,179,237,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.15) !important;
     transform: translateY(-2px) !important;
 }
 
@@ -523,7 +557,12 @@ h2, h3 {
 hr {
     border: none !important;
     height: 1px !important;
-    background: linear-gradient(90deg, transparent, rgba(99,179,237,0.2), rgba(255,255,255,0.06), rgba(99,179,237,0.2), transparent) !important;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(99,179,237,0.2),
+        rgba(255,255,255,0.06),
+        rgba(99,179,237,0.2),
+        transparent) !important;
     margin: 2rem 0 !important;
 }
 
@@ -554,7 +593,7 @@ footer { visibility: hidden !important; }
 }
 
 @keyframes contentReveal {
-    0% { opacity: 0; transform: translateY(30px); }
+    0%   { opacity: 0; transform: translateY(30px); }
     100% { opacity: 1; transform: translateY(0); }
 }
 
@@ -582,14 +621,18 @@ footer { visibility: hidden !important; }
     border: 1px solid rgba(255,255,255,0.07);
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.06);
     transition: all 0.3s ease;
     margin-bottom: 12px;
 }
 
 .chart-glass:hover {
     border-color: rgba(99,179,237,0.2);
-    box-shadow: 0 12px 48px rgba(0,0,0,0.4), 0 0 30px rgba(99,179,237,0.04);
+    box-shadow:
+        0 12px 48px rgba(0,0,0,0.4),
+        0 0 30px rgba(99,179,237,0.04);
 }
 
 /* ─── ROAD PROGRESS BAR (TOP) ─────────────────────────────────── */
@@ -605,113 +648,15 @@ footer { visibility: hidden !important; }
 }
 
 @keyframes progressLoad {
-    0% { width: 0%; opacity: 1; }
-    90% { width: 100%; opacity: 1; }
+    0%   { width: 0%; opacity: 1; }
+    90%  { width: 100%; opacity: 1; }
     100% { width: 100%; opacity: 0; }
 }
 </style>
 
-<!-- ═══════════════════════════════════════════════════════════
-     RACING INTRO OVERLAY
-════════════════════════════════════════════════════════════ -->
-<div id="intro-overlay">
-    
-    <!-- Speed lines -->
-    <div class="speed-line" style="top:20%;width:800px;animation-delay:0s;animation-duration:0.5s;"></div>
-    <div class="speed-line" style="top:35%;width:600px;animation-delay:0.1s;animation-duration:0.45s;"></div>
-    <div class="speed-line" style="top:50%;width:900px;animation-delay:0.05s;animation-duration:0.55s;"></div>
-    <div class="speed-line" style="top:65%;width:700px;animation-delay:0.15s;animation-duration:0.5s;"></div>
-    <div class="speed-line" style="top:78%;width:500px;animation-delay:0.2s;animation-duration:0.4s;"></div>
-    <div class="speed-line" style="top:28%;width:750px;animation-delay:0.08s;animation-duration:0.6s;"></div>
-    <div class="speed-line" style="top:58%;width:650px;animation-delay:0.12s;animation-duration:0.48s;"></div>
-
-    <!-- Title & Subtitle -->
-    <div id="intro-title">🚦 ROAD SAFETY AI</div>
-    <div id="intro-subtitle">Data Mining Intelligence Platform</div>
-
-    <!-- Loading bar -->
-    <div id="intro-loading">
-        <div id="intro-loading-bar"></div>
-    </div>
-
-    <!-- Road -->
-    <div id="intro-road"></div>
-
-    <!-- Headlight beam -->
-    <div id="car-beam"></div>
-
-    <!-- The Racing Car (SVG inline) -->
-    <svg id="racing-car" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
-        <!-- Car body shadow -->
-        <ellipse cx="110" cy="66" rx="80" ry="6" fill="rgba(0,0,0,0.4)"/>
-        <!-- Car body main -->
-        <path d="M20 50 L30 30 L60 18 L150 18 L185 30 L195 50 Z" 
-              fill="url(#bodyGrad)" stroke="rgba(99,179,237,0.6)" stroke-width="1.5"/>
-        <!-- Car roof -->
-        <path d="M55 18 L70 8 L145 8 L160 18 Z" 
-              fill="url(#roofGrad)" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
-        <!-- Windshield -->
-        <path d="M75 18 L82 9 L138 9 L145 18 Z" 
-              fill="rgba(99,179,237,0.25)" stroke="rgba(99,179,237,0.5)" stroke-width="0.5"/>
-        <!-- Side window -->
-        <rect x="82" y="10" width="25" height="8" rx="2" fill="rgba(99,179,237,0.3)" stroke="rgba(99,179,237,0.4)" stroke-width="0.5"/>
-        <!-- Door lines -->
-        <line x1="110" y1="18" x2="112" y2="50" stroke="rgba(99,179,237,0.3)" stroke-width="1"/>
-        <!-- Front hood details -->
-        <path d="M155 25 L185 30 L188 38 L155 35 Z" fill="rgba(99,179,237,0.08)" stroke="rgba(99,179,237,0.3)" stroke-width="0.5"/>
-        <!-- Rear spoiler -->
-        <rect x="18" y="26" width="12" height="3" rx="1.5" fill="rgba(99,179,237,0.6)" stroke="rgba(99,179,237,0.8)" stroke-width="0.5"/>
-        <!-- Headlight (front) -->
-        <ellipse cx="188" cy="40" rx="7" ry="5" fill="rgba(255,240,180,0.9)" stroke="rgba(255,240,180,0.5)" stroke-width="1"/>
-        <ellipse cx="188" cy="40" rx="4" ry="3" fill="white"/>
-        <!-- Tail light (rear) -->
-        <rect x="20" y="38" width="8" height="6" rx="2" fill="rgba(255,60,60,0.9)" stroke="rgba(255,60,60,0.6)" stroke-width="0.5"/>
-        <!-- Rear light glow -->
-        <rect x="18" y="37" width="10" height="8" rx="2" fill="rgba(255,60,60,0.2)"/>
-        <!-- Wheels -->
-        <circle cx="55" cy="55" r="13" fill="#1a1a2e" stroke="rgba(99,179,237,0.5)" stroke-width="2"/>
-        <circle cx="55" cy="55" r="8" fill="#0d1117" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
-        <circle cx="55" cy="55" r="3" fill="rgba(99,179,237,0.7)"/>
-        <!-- Wheel spokes front -->
-        <line x1="55" y1="47" x2="55" y2="63" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
-        <line x1="47" y1="55" x2="63" y2="55" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
-        
-        <circle cx="160" cy="55" r="13" fill="#1a1a2e" stroke="rgba(99,179,237,0.5)" stroke-width="2"/>
-        <circle cx="160" cy="55" r="8" fill="#0d1117" stroke="rgba(99,179,237,0.4)" stroke-width="1.5"/>
-        <circle cx="160" cy="55" r="3" fill="rgba(99,179,237,0.7)"/>
-        <!-- Wheel spokes rear -->
-        <line x1="160" y1="47" x2="160" y2="63" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
-        <line x1="152" y1="55" x2="168" y2="55" stroke="rgba(99,179,237,0.4)" stroke-width="1"/>
-        
-        <!-- Racing stripe -->
-        <path d="M55 30 L155 30" stroke="rgba(99,179,237,0.4)" stroke-width="2" stroke-dasharray="8,4"/>
-        <!-- Number plate area -->
-        <rect x="175" y="46" width="18" height="8" rx="2" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
-        <!-- Exhaust smoke particles -->
-        <circle cx="12" cy="46" r="4" fill="rgba(150,150,180,0.2)" style="animation: particleFade 0.5s ease-out 0s infinite;"/>
-        <circle cx="6" cy="42" r="3" fill="rgba(150,150,180,0.15)" style="animation: particleFade 0.5s ease-out 0.1s infinite;"/>
-        <circle cx="2" cy="50" r="2.5" fill="rgba(150,150,180,0.1)" style="animation: particleFade 0.5s ease-out 0.2s infinite;"/>
-        
-        <!-- Gradients -->
-        <defs>
-            <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1"/>
-                <stop offset="50%" style="stop-color:#0f2440;stop-opacity:1"/>
-                <stop offset="100%" style="stop-color:#0a1628;stop-opacity:1"/>
-            </linearGradient>
-            <linearGradient id="roofGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style="stop-color:#2a4a70;stop-opacity:1"/>
-                <stop offset="100%" style="stop-color:#1a3050;stop-opacity:1"/>
-            </linearGradient>
-        </defs>
-    </svg>
-</div>
-
 <!-- Top road progress bar -->
 <div class="road-progress"></div>
-
 """, unsafe_allow_html=True)
-
 
 # -----------------------------------------------------------------------------
 # SAFE ANIMATION LOADER
@@ -726,10 +671,10 @@ def load_lottieurl(url):
     except:
         return None
 
-lottie_car  = load_lottieurl("https://lottie.host/5a67b2d9-3453-41c3-8822-263435104278/oFf4z4x5b6.json")
-lottie_ai   = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_jtbfg2nb.json")
-lottie_safe = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_XyYeB8.json")
-lottie_danger= load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_qpwbqbf9.json")
+lottie_car    = load_lottieurl("https://lottie.host/5a67b2d9-3453-41c3-8822-263435104278/oFf4z4x5b6.json")
+lottie_ai     = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_jtbfg2nb.json")
+lottie_safe   = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_XyYeB8.json")
+lottie_danger = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_qpwbqbf9.json")
 
 # -----------------------------------------------------------------------------
 # LOAD DATA
@@ -748,8 +693,8 @@ def load_and_clean_data():
     day_map     = {'1':'Sunday','2':'Monday','3':'Tuesday','4':'Wednesday','5':'Thursday','6':'Friday','7':'Saturday'}
     area_map    = {'1':'Urban','2':'Rural','0':'Unknown'}
 
-    for col, mapper in [('Weather_Conditions', weather_map),('Light_Conditions', light_map),
-                        ('Road_Surface_Conditions', road_map),('Day_of_Week', day_map),
+    for col, mapper in [('Weather_Conditions', weather_map), ('Light_Conditions', light_map),
+                        ('Road_Surface_Conditions', road_map), ('Day_of_Week', day_map),
                         ('Urban_or_Rural_Area', area_map)]:
         if col in df.columns:
             df[col] = df[col].astype(str).str.replace('.0','',regex=False).map(mapper).fillna('Other')
@@ -771,7 +716,6 @@ PLOTLY_LAYOUT = dict(
 # SIDEBAR
 # -----------------------------------------------------------------------------
 with st.sidebar:
-    # Status pill
     st.markdown("""
     <div class="sidebar-status">
         <div class="pulse-dot"></div>
@@ -794,7 +738,6 @@ with st.sidebar:
                 margin-bottom:16px;">Filter & Configure</div>
     """, unsafe_allow_html=True)
 
-    # --- Navigation ---
     st.markdown("""
     <div style="margin-bottom:12px;">
       <div class="nav-item active">📊 &nbsp; Dashboard Overview</div>
@@ -806,7 +749,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Severity Filter
     st.markdown("""<div style="font-family:'Inter',sans-serif;font-size:10px;letter-spacing:2px;
                 text-transform:uppercase;color:rgba(148,163,184,0.6);margin-bottom:6px;">
                 ⚠️ Severity Level</div>""", unsafe_allow_html=True)
@@ -829,10 +771,9 @@ with st.sidebar:
 
     st.divider()
 
-    # Stats summary in sidebar
     total = len(filtered_df)
     fatal = len(filtered_df[filtered_df['Severity_Text']=='Fatal']) if not filtered_df.empty else 0
-    pct   = round(fatal/total*100,1) if total > 0 else 0
+    pct   = round(fatal/total*100, 1) if total > 0 else 0
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
                 border-radius:14px;padding:14px;font-family:'Inter',sans-serif;">
@@ -863,7 +804,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------------------------
 # MAIN HEADER
 # -----------------------------------------------------------------------------
@@ -876,20 +816,19 @@ st.markdown("""
 st.title("🚦 Road Accident Pattern Analysis & AI Prediction")
 st.markdown("""
 <p style="font-family:'Inter',sans-serif;font-size:15px;color:rgba(148,163,184,0.7);
-           letter-spacing:0.3px;margin-top:-8px;margin-bottom:0;">
-  Powered by Machine Learning &nbsp;·&nbsp; Real-time Risk Intelligence &nbsp;·&nbsp; Data Mining Algorithms
+          letter-spacing:0.3px;margin-top:-8px;margin-bottom:0;">
+    Powered by Machine Learning &nbsp;·&nbsp; Real-time Risk Intelligence &nbsp;·&nbsp; Data Mining Algorithms
 </p>
 """, unsafe_allow_html=True)
-
 st.divider()
 
 # ─── METRIC CARDS ─────────────────────────────────────────────────────────────
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Accidents",    f"{len(filtered_df):,}")
-col2.metric("Avg Speed Limit",    f"{filtered_df['Speed_limit'].mean():.0f} km/h" if not filtered_df.empty else "N/A")
-col3.metric("Total Casualties",   f"{int(filtered_df['Number_of_Casualties'].sum()):,}" if not filtered_df.empty else "0")
+col1.metric("Total Accidents", f"{len(filtered_df):,}")
+col2.metric("Avg Speed Limit", f"{filtered_df['Speed_limit'].mean():.0f} km/h" if not filtered_df.empty else "N/A")
+col3.metric("Total Casualties", f"{int(filtered_df['Number_of_Casualties'].sum()):,}" if not filtered_df.empty else "0")
 top_area = filtered_df['Urban_or_Rural_Area'].mode()[0] if not filtered_df.empty else "N/A"
-col4.metric("High Risk Zone",     top_area)
+col4.metric("High Risk Zone", top_area)
 
 st.divider()
 
@@ -897,7 +836,6 @@ st.divider()
 # INTERACTIVE CHARTS
 # -----------------------------------------------------------------------------
 if not filtered_df.empty:
-    # Row 1
     col_a, col_b = st.columns(2)
 
     with col_a:
@@ -922,7 +860,6 @@ if not filtered_df.empty:
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Row 2
     col_c, col_d = st.columns(2)
 
     with col_c:
@@ -948,7 +885,6 @@ if not filtered_df.empty:
         fig.update_traces(marker_line_width=0)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-
 else:
     st.warning("No data matches your filters. Please adjust sidebar filters.")
 
@@ -968,9 +904,9 @@ if lottie_ai:
         st.markdown("""
         <div style="padding-top:24px;">
         <p style="font-family:'Inter';font-size:14px;color:rgba(148,163,184,0.75);line-height:1.7;">
-        Configure the conditions below and let the AI engine assess the accident risk probability 
-        using a trained <strong style="color:#90cdf4;">Random Forest Classifier</strong> 
-        with real accident data.
+            Configure the conditions below and let the AI engine assess the accident risk probability
+            using a trained <strong style="color:#90cdf4;">Random Forest Classifier</strong>
+            with real accident data.
         </p></div>""", unsafe_allow_html=True)
 
 @st.cache_resource
@@ -989,7 +925,6 @@ def train_model(data):
 with st.spinner("Initializing AI Engine..."):
     model, accuracy = train_model(df)
 
-# Input row
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown('<div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(148,163,184,0.5);margin-bottom:4px;">Speed Limit</div>', unsafe_allow_html=True)
@@ -1006,19 +941,18 @@ with col4:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-if st.button("🚨  PREDICT RISK LEVEL", use_container_width=True, type="primary"):
+if st.button("🚨 PREDICT RISK LEVEL", use_container_width=True, type="primary"):
     risk_score = 15
-    if speed > 60:  risk_score += 20
-    if speed > 90:  risk_score += 30
-    if weather == "Raining":  risk_score += 15
-    elif weather == "Fog":    risk_score += 25
-    elif weather == "Snowing":risk_score += 35
-    if road == "Wet":  risk_score += 10
-    elif road == "Ice":risk_score += 40
+    if speed > 60: risk_score += 20
+    if speed > 90: risk_score += 30
+    if weather == "Raining": risk_score += 15
+    elif weather == "Fog":   risk_score += 25
+    elif weather == "Snowing": risk_score += 35
+    if road == "Wet": risk_score += 10
+    elif road == "Ice": risk_score += 40
     if "Darkness" in light: risk_score += 20
     risk_score = min(risk_score, 100)
 
-    # Gauge
     gauge_color = "#fc8181" if risk_score > 60 else ("#f6ad55" if risk_score > 30 else "#68d391")
     fig = go.Figure(go.Indicator(
         mode="gauge+number+delta",
@@ -1034,9 +968,9 @@ if st.button("🚨  PREDICT RISK LEVEL", use_container_width=True, type="primary
             "bgcolor": "rgba(0,0,0,0)",
             "borderwidth": 0,
             "steps": [
-                {"range": [0, 30], "color": "rgba(104,211,145,0.1)"},
+                {"range": [0, 30],  "color": "rgba(104,211,145,0.1)"},
                 {"range": [30, 60], "color": "rgba(246,173,85,0.1)"},
-                {"range": [60, 100], "color": "rgba(252,129,129,0.1)"}
+                {"range": [60,100], "color": "rgba(252,129,129,0.1)"}
             ],
             "threshold": {"line": {"color": gauge_color, "width": 3}, "thickness": 0.85, "value": risk_score}
         }
@@ -1044,7 +978,6 @@ if st.button("🚨  PREDICT RISK LEVEL", use_container_width=True, type="primary
     fig.update_layout(height=280, **PLOTLY_LAYOUT)
     st.plotly_chart(fig, use_container_width=True)
 
-    # Result panel
     col_anim, col_result = st.columns([1, 2])
     with col_anim:
         if risk_score > 60:
@@ -1063,7 +996,7 @@ if st.button("🚨  PREDICT RISK LEVEL", use_container_width=True, type="primary
                             color:#fc8181;margin-bottom:10px;letter-spacing:1px;">🚨 HIGH RISK DETECTED</div>
                 <p style="font-family:'Inter';font-size:14px;color:rgba(226,232,240,0.8);line-height:1.7;margin:0;">
                 The AI engine predicts a <strong style="color:#fc8181;">high probability of Fatal or Serious accident</strong>.<br><br>
-                Speed <strong>{speed} km/h</strong> combined with <strong>{weather}</strong> weather 
+                Speed <strong>{speed} km/h</strong> combined with <strong>{weather}</strong> weather
                 and <strong>{road}</strong> road surface creates critical risk conditions.
                 </p>
                 <div style="margin-top:14px;font-family:'Inter';font-size:11px;letter-spacing:1.5px;
@@ -1079,7 +1012,7 @@ if st.button("🚨  PREDICT RISK LEVEL", use_container_width=True, type="primary
                             color:#68d391;margin-bottom:10px;letter-spacing:1px;">✅ SAFE TO DRIVE</div>
                 <p style="font-family:'Inter';font-size:14px;color:rgba(226,232,240,0.8);line-height:1.7;margin:0;">
                 The AI predicts a <strong style="color:#68d391;">Low Risk</strong> scenario for current conditions.<br><br>
-                <strong>{weather}</strong> weather with <strong>{road}</strong> road surface 
+                <strong>{weather}</strong> weather with <strong>{road}</strong> road surface
                 at <strong>{speed} km/h</strong> is within safe operating parameters.
                 </p>
                 <div style="margin-top:14px;font-family:'Inter';font-size:11px;letter-spacing:1.5px;
@@ -1105,10 +1038,10 @@ st.markdown('<div class="section-badge">📚 Algorithms</div>', unsafe_allow_htm
 st.subheader("Data Mining Algorithms — Syllabus Reference")
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊  Statistical Analysis",
-    "🧹  Data Preprocessing",
-    "📈  Classification",
-    "🔍  Clustering & Association"
+    "📊 Statistical Analysis",
+    "🧹 Data Preprocessing",
+    "📈 Classification",
+    "🔍 Clustering & Association"
 ])
 
 with tab1:
@@ -1123,12 +1056,12 @@ with tab1:
         st.metric("Median Speed", f"{stats_df['Speed_limit'].median():.2f}")
         st.metric("Mode Speed",   f"{stats_df['Speed_limit'].mode()[0]}")
     with c2:
-        st.metric("Variance",     f"{stats_df['Speed_limit'].var():.2f}")
-        st.metric("Std Deviation",f"{stats_df['Speed_limit'].std():.2f}")
-        st.metric("Range",        f"{stats_df['Speed_limit'].max()-stats_df['Speed_limit'].min()}")
+        st.metric("Variance",      f"{stats_df['Speed_limit'].var():.2f}")
+        st.metric("Std Deviation", f"{stats_df['Speed_limit'].std():.2f}")
+        st.metric("Range",         f"{stats_df['Speed_limit'].max()-stats_df['Speed_limit'].min()}")
     with c3:
-        st.metric("Avg Vehicles", f"{stats_df['Number_of_Vehicles'].mean():.2f}")
-        st.metric("Avg Casualties",f"{stats_df['Number_of_Casualties'].mean():.2f}")
+        st.metric("Avg Vehicles",   f"{stats_df['Number_of_Vehicles'].mean():.2f}")
+        st.metric("Avg Casualties", f"{stats_df['Number_of_Casualties'].mean():.2f}")
 
     st.markdown('<div class="chart-glass">', unsafe_allow_html=True)
     st.subheader("Speed Limit Histogram")
@@ -1222,7 +1155,6 @@ with tab4:
     rules = association_rules(freq_itemsets, metric="confidence", min_threshold=0.5)
     st.dataframe(rules[['antecedents','consequents','support','confidence','lift']].head(8),
                  use_container_width=True)
-
 
 # ─── FOOTER ───────────────────────────────────────────────────────────────────
 st.divider()
